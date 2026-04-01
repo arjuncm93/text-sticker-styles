@@ -186,6 +186,66 @@ body.light {
 .style-card:hover .copy-btn { opacity: 1; }
 .copy-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
+/* ── Font Modal ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; opacity: 0; pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; width: 100%; max-width: 680px;
+  max-height: 82vh; display: flex; flex-direction: column;
+  transform: translateY(16px); transition: transform 0.25s ease;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-title { font-size: 0.95rem; font-weight: 700; }
+.modal-subtitle { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+  background: none; cursor: pointer; color: var(--muted); font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition), color var(--transition);
+}
+.modal-close:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+.modal-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px; padding: 16px; overflow-y: auto;
+}
+.modal-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; cursor: pointer;
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+.modal-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 6px 18px rgba(0,0,0,0.2); }
+.modal-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.modal-card .m-preview {
+  aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
+  padding: 10px; overflow: hidden; text-align: center;
+  word-break: break-word; position: relative;
+}
+.light .modal-card .m-preview::before { background: url('wa-bg.jpg') center/cover; }
+.dark  .modal-card .m-preview::before { background: url('wa-bg-dark.jpg') center/cover; }
+.modal-card .m-preview::before { content:''; position:absolute; inset:0; }
+.modal-card .m-preview > * { position:relative; z-index:1; }
+.modal-card .m-label {
+  padding: 6px 8px; font-size: 0.68rem; font-weight: 600; color: var(--muted);
+  text-align: center; border-top: 1px solid var(--border);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
 /* ── Bottom bar ───────────────────────────────────────────────── */
 .bottom-bar {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
@@ -500,6 +560,20 @@ body.light {
 
 </div>
 
+<!-- Font Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">Style</div>
+        <div class="modal-subtitle">Click a font to apply it globally</div>
+      </div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-grid" id="modalGrid"></div>
+  </div>
+</div>
+
 <!-- Bottom bar -->
 <div class="bottom-bar">
   <div class="bottom-bar-inner">
@@ -574,20 +648,68 @@ const styles = [
   { name: 'Float',          cls: 's-float',        animated: true },
 ];
 
-const grid       = document.getElementById('grid');
-const textarea   = document.getElementById('stickerText');
-const cssToggle  = document.getElementById('cssToggle');
-const cssPanel   = document.getElementById('cssPanel');
-const cssInput   = document.getElementById('cssInput');
-const customSpan = document.getElementById('customSpan');
-const customWrap = document.getElementById('customPreviewWrap');
-const customTag  = document.createElement('style');
+const grid        = document.getElementById('grid');
+const textarea    = document.getElementById('stickerText');
+const cssToggle   = document.getElementById('cssToggle');
+const cssPanel    = document.getElementById('cssPanel');
+const cssInput    = document.getElementById('cssInput');
+const customSpan  = document.getElementById('customSpan');
+const customWrap  = document.getElementById('customPreviewWrap');
+const customTag   = document.createElement('style');
 document.head.appendChild(customTag);
-const fontSize   = document.getElementById('fontSize');
-const fontSizeVal= document.getElementById('fontSizeVal');
-const modeToggle = document.getElementById('modeToggle');
-const modeLabel  = document.getElementById('modeLabel');
-const fontFamily = document.getElementById('fontFamily');
+const fontSize    = document.getElementById('fontSize');
+const fontSizeVal = document.getElementById('fontSizeVal');
+const modeToggle  = document.getElementById('modeToggle');
+const modeLabel   = document.getElementById('modeLabel');
+const fontFamily  = document.getElementById('fontFamily');
+const modalOverlay= document.getElementById('modalOverlay');
+const modalGrid   = document.getElementById('modalGrid');
+const modalTitle  = document.getElementById('modalTitle');
+const modalClose  = document.getElementById('modalClose');
+
+const FONTS = [
+  { label: 'Inter',          value: "Inter, sans-serif" },
+  { label: 'Arial Black',    value: "'Arial Black', sans-serif" },
+  { label: 'Arial',          value: "Arial, sans-serif" },
+  { label: 'Impact',         value: "Impact, sans-serif" },
+  { label: 'Georgia',        value: "Georgia, serif" },
+  { label: 'Times New Roman',value: "'Times New Roman', serif" },
+  { label: 'Courier New',    value: "'Courier New', monospace" },
+  { label: 'Comic Sans',     value: "'Comic Sans MS', cursive" },
+  { label: 'Trebuchet MS',   value: "'Trebuchet MS', sans-serif" },
+  { label: 'Verdana',        value: "Verdana, sans-serif" },
+  { label: 'Palatino',       value: "Palatino, serif" },
+];
+
+function openModal(style) {
+  const text  = textarea.value || 'This is awesome!';
+  const scale = parseFloat(fontSize.value);
+  modalTitle.textContent = style.name;
+  modalGrid.innerHTML = '';
+  FONTS.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'modal-card' + (fontFamily.value === f.value ? ' selected' : '');
+    card.innerHTML = `
+      <div class="m-preview">
+        <span class="${style.cls}" style="transform:scale(${scale});display:inline-block;max-width:100%;word-break:break-word;font-family:${f.value};">${text}</span>
+      </div>
+      <div class="m-label">${f.label}</div>`;
+    card.addEventListener('click', () => {
+      fontFamily.value = f.value;
+      modalGrid.querySelectorAll('.modal-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      render();
+    });
+    modalGrid.appendChild(card);
+  });
+  modalOverlay.classList.add('open');
+}
+
+function closeModal() { modalOverlay.classList.remove('open'); }
+
+modalClose.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 let isDark = true;
 let activeTab = 'favourites';
@@ -668,6 +790,15 @@ grid.addEventListener('click', e => {
     savePinned(); render(); return;
   }
   const copyBtn = e.target.closest('.copy-btn');
+  if (!copyBtn) {
+    const card = e.target.closest('.style-card');
+    if (card) {
+      const cls = card.querySelector('.fav-btn')?.dataset.cls;
+      const style = styles.find(s => s.cls === cls);
+      if (style) openModal(style);
+      return;
+    }
+  }
   if (copyBtn) {
     const cls = copyBtn.dataset.cls;
     const el  = document.querySelector(`.${cls}`);
