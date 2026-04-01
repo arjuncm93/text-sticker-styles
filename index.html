@@ -437,7 +437,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="favourites">♥ Favourites</button>
     <button class="tab-btn" data-tab="animated">✦ Animated</button>
-    <button class="tab-btn" data-tab="all">All</button>
+    <button class="tab-btn" data-tab="static">◼ Static</button>
   </div>
 
   <div id="customPreviewWrap" style="display:none; margin-bottom:20px;">
@@ -553,11 +553,11 @@ function render() {
   let visible;
   if (activeTab === 'favourites') visible = styles.filter(s => pinned.has(s.cls));
   else if (activeTab === 'animated') visible = styles.filter(s => s.animated);
-  else visible = [...styles].sort((a, b) => (pinned.has(a.cls) ? 0 : 1) - (pinned.has(b.cls) ? 0 : 1));
+  else visible = styles.filter(s => !s.animated);
 
   if (visible.length === 0) {
     grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;opacity:0.5;padding:40px;">
-      ${activeTab === 'favourites' ? 'No favourites yet — tap ♡ on any style.' : 'Nothing here.'}
+      ${activeTab === 'favourites' ? 'No favourites yet — tap ♡ on any style.' : 'Nothing here yet.'}
     </p>`;
     return;
   }
