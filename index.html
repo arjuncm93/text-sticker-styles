@@ -651,6 +651,15 @@ function updateCustomPreview() {
   customSpan.style.cssText += `transform:scale(${scale});display:inline-block;max-width:100%;word-break:break-word;font-family:${fontFamily.value};`;
 }
 
+grid.addEventListener('dblclick', e => {
+  const card = e.target.closest('.style-card');
+  if (!card) return;
+  const cls = card.querySelector('.fav-btn')?.dataset.cls;
+  if (!cls) return;
+  pinned.has(cls) ? pinned.delete(cls) : pinned.add(cls);
+  savePinned(); render();
+});
+
 grid.addEventListener('click', e => {
   const fav = e.target.closest('.fav-btn');
   if (fav) {
