@@ -868,59 +868,47 @@ async function canvasToWebP(canvas, quality) {
 }
 
 async function exportSticker(style, btn) {
-  const SIZE    = 512;
-  const text    = textarea.value || 'This is awesome!';
-  const font    = fontFamily.value;
-  const scale   = parseFloat(fontSize.value) * (SIZE / 200);
-  const card    = btn.closest('.style-card');
+  const SIZE = 512;
+  const card = btn.closest('.style-card');
 
-  btn.textContent = '…'; btn.classList.add('loading');
-  card.classList.add('card-exporting');
+  // Clone the ACTUAL rendered span — identical style, font, wrap
+  const livePreview = card.querySelector('.preview');
+  const liveSpan    = livePreview.querySelector('span');
+  const previewPx   = livePreview.offsetWidth;
+  const upScale     = SIZE / previewPx;
 
-  // Off-screen container — no background at all
+  // Fresh container, same pixel size as visible preview, no background
   const wrap = document.createElement('div');
-  wrap.style.cssText = `position:fixed;top:-9999px;left:-9999px;
-    width:${SIZE}px;height:${SIZE}px;
-    display:flex;align-items:center;justify-content:center;
-    overflow:hidden;background:none;`;
+  wrap.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${previewPx}px;height:${previewPx}px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:none;`;
 
-  const span = document.createElement('span');
-  span.className = style.cls;
-  span.textContent = text;
-  span.style.cssText = `font-family:${font};display:inline-block;max-width:85%;
-    word-break:break-word;overflow-wrap:break-word;text-align:center;
-    transform:scale(${scale});transform-origin:center;background:none;`;
+  // Deep-clone preserves CSS class + all inline styles (font, scale, wrap)
+  const span = liveSpan.cloneNode(true);
   wrap.appendChild(span);
   document.body.appendChild(wrap);
 
-  const h2cOpts = {
-    width: SIZE, height: SIZE,
-    backgroundColor: null,   // transparent canvas
-    scale: 1,
-    useCORS: true,
-    allowTaint: true,
-    logging: false,
-    ignoreElements: el => {
-      // Skip any ::before pseudo-element stand-ins (WA background images)
-      return el !== wrap && el !== span && el.tagName !== 'SPAN';
-    }
-  };
-
-  // Render to canvas and ensure true transparency
-  async function captureTransparent() {
-    const raw = await html2canvas(wrap, h2cOpts);
-    // Draw onto a fresh canvas with explicit transparency
+  async function capture() {
+    const raw = await html2canvas(wrap, {
+      width: previewPx, height: previewPx,
+      backgroundColor: null,
+      scale: upScale,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+    });
     const out = document.createElement('canvas');
     out.width = SIZE; out.height = SIZE;
     const ctx = out.getContext('2d');
     ctx.clearRect(0, 0, SIZE, SIZE);
-    ctx.drawImage(raw, 0, 0);
+    ctx.drawImage(raw, 0, 0, SIZE, SIZE);
     return out;
   }
 
+  btn.textContent = '…'; btn.classList.add('loading');
+  card.classList.add('card-exporting');
+
   try {
     if (!style.animated) {
-      const canvas = await captureTransparent();
+      const canvas = await capture();
       let blob, q = 0.95;
       do { blob = await canvasToWebP(canvas, q); q -= 0.1; } while (blob.size > 510*1024 && q > 0.1);
       download(blob, `${style.name}.webp`);
@@ -931,7 +919,7 @@ async function exportSticker(style, btn) {
       const frameBlobs = [];
       for (let i = 0; i < FRAMES; i++) {
         await new Promise(r => setTimeout(r, DELAY));
-        const canvas = await captureTransparent();
+        const canvas = await capture();
         let blob, q = 0.85;
         do { blob = await canvasToWebP(canvas, q); q -= 0.1; } while (blob.size > Math.floor(510*1024/FRAMES) && q > 0.1);
         frameBlobs.push(blob);
