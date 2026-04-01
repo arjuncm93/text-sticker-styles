@@ -877,25 +877,50 @@ async function exportSticker(style, btn) {
   btn.textContent = '…'; btn.classList.add('loading');
   card.classList.add('card-exporting');
 
-  const wrap = Object.assign(document.createElement('div'), {
-    style: `position:fixed;top:-9999px;left:-9999px;width:${SIZE}px;height:${SIZE}px;
-            display:flex;align-items:center;justify-content:center;overflow:hidden;background:transparent;`
-  });
+  // Off-screen container — no background at all
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `position:fixed;top:-9999px;left:-9999px;
+    width:${SIZE}px;height:${SIZE}px;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;background:none;`;
+
   const span = document.createElement('span');
   span.className = style.cls;
   span.textContent = text;
-  Object.assign(span.style, {
-    fontFamily: font, display: 'inline-block', maxWidth: '85%',
-    wordBreak: 'break-word', overflowWrap: 'break-word', textAlign: 'center',
-    transform: `scale(${scale})`, transformOrigin: 'center'
-  });
+  span.style.cssText = `font-family:${font};display:inline-block;max-width:85%;
+    word-break:break-word;overflow-wrap:break-word;text-align:center;
+    transform:scale(${scale});transform-origin:center;background:none;`;
   wrap.appendChild(span);
   document.body.appendChild(wrap);
 
+  const h2cOpts = {
+    width: SIZE, height: SIZE,
+    backgroundColor: null,   // transparent canvas
+    scale: 1,
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+    ignoreElements: el => {
+      // Skip any ::before pseudo-element stand-ins (WA background images)
+      return el !== wrap && el !== span && el.tagName !== 'SPAN';
+    }
+  };
+
+  // Render to canvas and ensure true transparency
+  async function captureTransparent() {
+    const raw = await html2canvas(wrap, h2cOpts);
+    // Draw onto a fresh canvas with explicit transparency
+    const out = document.createElement('canvas');
+    out.width = SIZE; out.height = SIZE;
+    const ctx = out.getContext('2d');
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    ctx.drawImage(raw, 0, 0);
+    return out;
+  }
+
   try {
     if (!style.animated) {
-      const canvas = await html2canvas(wrap, { width:SIZE, height:SIZE, backgroundColor:null, scale:1, logging:false });
-      // Target < 510 KB, try quality from 0.95 down
+      const canvas = await captureTransparent();
       let blob, q = 0.95;
       do { blob = await canvasToWebP(canvas, q); q -= 0.1; } while (blob.size > 510*1024 && q > 0.1);
       download(blob, `${style.name}.webp`);
@@ -906,9 +931,8 @@ async function exportSticker(style, btn) {
       const frameBlobs = [];
       for (let i = 0; i < FRAMES; i++) {
         await new Promise(r => setTimeout(r, DELAY));
-        const canvas = await html2canvas(wrap, { width:SIZE, height:SIZE, backgroundColor:null, scale:1, logging:false });
+        const canvas = await captureTransparent();
         let blob, q = 0.85;
-        // keep each frame small so total stays < 510 KB
         do { blob = await canvasToWebP(canvas, q); q -= 0.1; } while (blob.size > Math.floor(510*1024/FRAMES) && q > 0.1);
         frameBlobs.push(blob);
       }
