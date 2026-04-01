@@ -3,220 +3,301 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Text Sticker Styles</title>
+<title>Sticker Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', sans-serif; color: #eee; min-height: 100vh; padding: 20px; transition: background 0.3s; }
-  body.dark-mode { background: #0b141a; }
-  body.light-mode { background: #efeae2; color: #111; }
+/* ── Reset & Base ─────────────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-  .container { max-width: 900px; margin: 0 auto; }
-  h1 { text-align: center; margin-bottom: 24px; font-size: 1.6rem; }
-  .dark-mode h1 { color: #a8b2d1; }
-  .light-mode h1 { color: #555; }
+:root {
+  --accent:   #25d366;
+  --accent2:  #128c7e;
+  --danger:   #e94560;
+  --radius:   14px;
+  --radius-sm: 8px;
+  --transition: 0.22s ease;
+}
 
-  .input-section {
-    border-radius: 12px 12px 0 0; padding: 20px; transition: background 0.3s;
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
-  }
-  .grid-wrapper { padding-bottom: 200px; }
-  .dark-mode .input-section { background: #1f2c34; }
-  .light-mode .input-section { background: #fff; }
-  .input-section label { display: block; margin-bottom: 8px; font-weight: 600; }
-  .dark-mode .input-section label { color: #a8b2d1; }
-  .light-mode .input-section label { color: #555; }
-  .input-section textarea {
-    width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #0f3460;
-    font-size: 1.1rem; resize: vertical; min-height: 60px; transition: background 0.3s, color 0.3s;
-  }
-  .dark-mode .input-section textarea { background: #0b141a; color: #eee; }
-  .light-mode .input-section textarea { background: #f0f0f0; color: #111; border-color: #ccc; }
-  .input-section textarea:focus { outline: none; border-color: #25d366; }
+body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+}
 
-  .controls {
-    display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; align-items: center;
-  }
-  .dark-mode .controls label { font-size: 0.85rem; color: #a8b2d1; }
-  .light-mode .controls label { font-size: 0.85rem; color: #555; }
-  .controls input[type="range"] { width: 120px; }
-  .controls select {
-    padding: 4px 8px; border-radius: 6px; border: 1px solid #444; font-size: 0.85rem; cursor: pointer;
-  }
-  .dark-mode .controls select { background: #0b141a; color: #eee; border-color: #2a3942; }
-  .light-mode .controls select { background: #f0f0f0; color: #111; border-color: #ccc; }
+/* ── Themes ───────────────────────────────────────────────────── */
+body.dark {
+  --bg:        #0b141a;
+  --surface:   #111b21;
+  --surface2:  #1f2c34;
+  --border:    rgba(255,255,255,0.06);
+  --text:      #e9edef;
+  --muted:     #8696a0;
+  background: var(--bg); color: var(--text);
+}
+body.light {
+  --bg:        #f0ebe3;
+  --surface:   #ffffff;
+  --surface2:  #f7f3ee;
+  --border:    rgba(0,0,0,0.08);
+  --text:      #111b21;
+  --muted:     #667781;
+  background: var(--bg); color: var(--text);
+}
 
-  .css-btn {
-    padding: 5px 14px; border-radius: 6px; border: none; cursor: pointer;
-    font-size: 0.82rem; font-weight: 600; transition: all 0.2s;
-  }
-  .dark-mode .css-btn { background: #2a3942; color: #a8b2d1; }
-  .light-mode .css-btn { background: #d9d3ca; color: #555; }
-  .css-btn.active { background: #25d366; color: #fff; }
+/* ── Layout ───────────────────────────────────────────────────── */
+.page { max-width: 960px; margin: 0 auto; padding: 24px 16px 220px; }
 
-  .css-panel {
-    max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s;
-    padding: 0 0;
-  }
-  .css-panel.open { max-height: 220px; padding: 12px 0 0; }
-  .css-panel textarea {
-    width: 100%; height: 160px; padding: 10px; border-radius: 8px;
-    font-family: 'Courier New', monospace; font-size: 0.82rem; resize: none;
-    border: 2px solid #25d366; outline: none;
-  }
-  .dark-mode .css-panel textarea { background: #0b141a; color: #eee; }
-  .light-mode .css-panel textarea { background: #f9f9f9; color: #111; }
+/* ── Header ───────────────────────────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--accent); display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+}
+.header-title { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.3px; }
+.header-sub { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
 
-  .custom-card {
-    border-radius: 12px; padding: 16px; text-align: center;
-    position: relative; grid-column: 1 / -1;
-  }
-  .dark-mode .custom-card { background: #0b141a; border: 2px solid #25d366; }
-  .light-mode .custom-card { background: #efeae2; border: 2px solid #25d366; }
-  .custom-card .style-name { font-size: 0.75rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; color: #25d366; }
-  .custom-card .preview {
-    width: 260px; max-width: 100%; aspect-ratio: 1/1; margin: 0 auto;
-    display: flex; align-items: center; justify-content: center;
-    padding: 16px; word-break: break-word; overflow-wrap: break-word;
-    line-height: 1.3; overflow: hidden; text-align: center;
-    border-radius: 8px; position: relative;
-  }
-  .light-mode .custom-card .preview::before { background: url('wa-bg.jpg') center/cover; }
-  .dark-mode .custom-card .preview::before  { background: url('wa-bg-dark.jpg') center/cover; }
-  .custom-card .preview::before { content: ''; position: absolute; inset: 0; border-radius: 8px; }
-  .custom-card .preview > * { position: relative; z-index: 1; }
+/* Dark/Light toggle */
+.theme-toggle {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 6px 12px; user-select: none;
+  font-size: 0.78rem; font-weight: 600; color: var(--muted);
+  transition: background var(--transition);
+}
+.theme-toggle:hover { background: var(--surface); }
+.toggle-track {
+  width: 32px; height: 18px; border-radius: 9px; position: relative;
+  transition: background var(--transition);
+}
+.dark  .toggle-track { background: var(--surface); }
+.light .toggle-track { background: var(--accent); }
+.toggle-thumb {
+  width: 14px; height: 14px; border-radius: 50%; background: #fff;
+  position: absolute; top: 2px; transition: left var(--transition);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.dark  .toggle-thumb { left: 2px; }
+.light .toggle-thumb { left: 16px; }
 
-  .mode-toggle {
-    display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
-  }
-  .mode-toggle .toggle-track {
-    width: 48px; height: 26px; border-radius: 13px; position: relative; transition: background 0.3s;
-  }
-  .dark-mode .toggle-track { background: #2a3942; }
-  .light-mode .toggle-track { background: #25d366; }
-  .mode-toggle .toggle-thumb {
-    width: 22px; height: 22px; border-radius: 50%; background: #fff; position: absolute; top: 2px;
-    transition: left 0.3s;
-  }
-  .dark-mode .toggle-thumb { left: 2px; }
-  .light-mode .toggle-thumb { left: 24px; }
+/* ── Tabs ─────────────────────────────────────────────────────── */
+.tabs {
+  display: flex; gap: 6px; margin-bottom: 24px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 4px; width: fit-content;
+}
+.tab-btn {
+  padding: 7px 18px; border-radius: 9px; border: none; cursor: pointer;
+  font-size: 0.82rem; font-weight: 600; color: var(--muted);
+  background: transparent; transition: all var(--transition); white-space: nowrap;
+}
+.tab-btn.active { background: var(--accent); color: #fff; }
+.tab-btn:not(.active):hover { background: var(--surface2); color: var(--text); }
 
-  .grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;
-  }
+/* ── Custom CSS preview card ──────────────────────────────────── */
+#customPreviewWrap { margin-bottom: 24px; }
+.custom-card {
+  background: var(--surface); border: 1.5px solid var(--accent);
+  border-radius: var(--radius); padding: 20px; text-align: center;
+}
+.custom-card-label {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--accent); margin-bottom: 14px;
+}
+.custom-card .preview-box {
+  width: 200px; max-width: 100%; aspect-ratio: 1/1; margin: 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; word-break: break-word; overflow-wrap: break-word;
+  line-height: 1.3; overflow: hidden; text-align: center;
+  border-radius: var(--radius-sm); position: relative;
+}
+.light .custom-card .preview-box::before { background: url('wa-bg.jpg') center/cover; }
+.dark  .custom-card .preview-box::before { background: url('wa-bg-dark.jpg') center/cover; }
+.custom-card .preview-box::before { content:''; position:absolute; inset:0; border-radius:var(--radius-sm); }
+.custom-card .preview-box > * { position:relative; z-index:1; }
 
-  .style-card {
-    border-radius: 12px; padding: 16px; text-align: center;
-    transition: transform 0.2s, background 0.3s; cursor: pointer; position: relative;
-  }
-  .dark-mode .style-card { background: #0b141a; }
-  .light-mode .style-card { background: #efeae2; }
-  .style-card:hover { transform: scale(1.03); }
-  .style-card .style-name {
-    font-size: 0.75rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;
-  }
-  .dark-mode .style-card .style-name { color: #a8b2d1; }
-  .light-mode .style-card .style-name { color: #888; }
-  .style-card .preview {
-    width: 100%; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center;
-    padding: 16px; word-break: break-word; overflow-wrap: break-word; line-height: 1.3; overflow: hidden;
-    text-align: center;
-    border-radius: 8px; transition: background 0.3s;
-  }
-  .style-card .preview { position: relative; }
-  .style-card .preview::before {
-    content: ''; position: absolute; inset: 0; border-radius: 8px;
-  }
-  .light-mode .style-card .preview::before { background: url('wa-bg.jpg') center/cover; }
-  .dark-mode .style-card .preview::before { background: url('wa-bg-dark.jpg') center/cover; }
-  .style-card .preview > * { position: relative; z-index: 1; }
-  .style-card .copy-btn {
-    position: absolute; bottom: 8px; right: 8px; background: #25d366; color: #fff;
-    border: none; border-radius: 6px; padding: 4px 10px; font-size: 0.7rem; cursor: pointer;
-    opacity: 0; transition: opacity 0.2s;
-  }
-  .style-card:hover .copy-btn { opacity: 1; }
+/* ── Empty state ──────────────────────────────────────────────── */
+.empty-state {
+  grid-column: 1/-1; text-align: center; padding: 60px 20px;
+  color: var(--muted); font-size: 0.9rem; line-height: 1.8;
+}
+.empty-state .icon { font-size: 2.4rem; display: block; margin-bottom: 10px; opacity: 0.5; }
 
-  .style-card .fav-btn {
-    position: absolute; top: 8px; right: 8px; background: none; border: none;
-    font-size: 1.2rem; cursor: pointer; opacity: 0.4; transition: opacity 0.2s, transform 0.2s;
-    line-height: 1;
-  }
-  .style-card:hover .fav-btn { opacity: 0.7; }
-  .style-card .fav-btn.active { opacity: 1; color: #e94560; transform: scale(1.2); }
-  .style-card.pinned { order: -1; }
+/* ── Grid ─────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
 
-  /* ---- Tabs ---- */
-  .tabs {
-    display: flex; gap: 8px; margin-bottom: 20px; justify-content: center;
-  }
-  .tab-btn {
-    padding: 8px 22px; border-radius: 20px; border: none; cursor: pointer;
-    font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; transition: all 0.2s;
-  }
-  .dark-mode .tab-btn { background: #1f2c34; color: #a8b2d1; }
-  .light-mode .tab-btn { background: #d9d3ca; color: #555; }
-  .tab-btn.active { background: #25d366; color: #fff; }
-  .dark-mode .tab-btn:hover:not(.active) { background: #2a3942; }
-  .light-mode .tab-btn:hover:not(.active) { background: #c8c1b7; }
+/* ── Card ─────────────────────────────────────────────────────── */
+.style-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; position: relative;
+  cursor: pointer; transition: transform var(--transition), box-shadow var(--transition);
+}
+.style-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
 
-  /* ---- Sticker Styles ---- */
+/* full-bleed preview */
+.style-card .preview {
+  width: 100%; aspect-ratio: 1/1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 14px; word-break: break-word; overflow-wrap: break-word;
+  line-height: 1.3; overflow: hidden; text-align: center;
+  position: relative;
+}
+.light .style-card .preview::before { background: url('wa-bg.jpg') center/cover; }
+.dark  .style-card .preview::before { background: url('wa-bg-dark.jpg') center/cover; }
+.style-card .preview::before { content:''; position:absolute; inset:0; }
+.style-card .preview > * { position:relative; z-index:1; }
 
-  /* All styles use strong outlines/shadows for legibility on both dark & light */
+/* card footer */
+.card-footer {
+  padding: 8px 10px; display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--border);
+}
+.style-name {
+  font-size: 0.72rem; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.6px; line-height: 1;
+}
+
+/* fav + copy buttons */
+.fav-btn {
+  background: none; border: none; cursor: pointer; font-size: 1rem;
+  line-height: 1; color: var(--muted); padding: 2px;
+  transition: color var(--transition), transform var(--transition);
+}
+.fav-btn:hover { transform: scale(1.2); }
+.fav-btn.active { color: var(--danger); }
+
+.copy-btn {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  border-radius: 6px; padding: 3px 9px; font-size: 0.68rem; font-weight: 600;
+  cursor: pointer; opacity: 0; transition: opacity var(--transition), background var(--transition);
+}
+.style-card:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── Bottom bar ───────────────────────────────────────────────── */
+.bottom-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--surface2); border-top: 1px solid var(--border);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
+  padding: 12px 16px 16px;
+}
+.bottom-bar-inner { max-width: 960px; margin: 0 auto; }
+
+.text-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.text-row textarea {
+  flex: 1; padding: 10px 14px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); font-size: 1rem; font-family: inherit;
+  resize: none; height: 44px; min-height: 44px; line-height: 1.4;
+  background: var(--surface); color: var(--text);
+  transition: border-color var(--transition), background var(--transition);
+  overflow: hidden;
+}
+.text-row textarea:focus { outline: none; border-color: var(--accent); }
+
+.controls-row {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+
+/* control pill */
+.ctrl {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 10px; font-size: 0.78rem;
+  color: var(--muted);
+}
+.ctrl select, .ctrl input[type="range"] {
+  background: transparent; border: none; outline: none;
+  font-family: inherit; font-size: 0.78rem; color: var(--text); cursor: pointer;
+}
+.ctrl select option { background: var(--surface); color: var(--text); }
+.ctrl input[type="range"] { width: 90px; accent-color: var(--accent); }
+.ctrl-label { font-weight: 600; white-space: nowrap; }
+
+.css-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 12px; font-size: 0.78rem;
+  font-weight: 600; color: var(--muted); cursor: pointer;
+  transition: all var(--transition);
+}
+.css-btn:hover { border-color: var(--accent); color: var(--accent); }
+.css-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* css editor panel */
+.css-panel {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease, margin 0.3s;
+  margin-top: 0;
+}
+.css-panel.open { max-height: 200px; margin-top: 10px; }
+.css-panel textarea {
+  width: 100%; height: 160px; padding: 10px 12px;
+  border-radius: var(--radius-sm); border: 1.5px solid var(--accent);
+  font-family: 'Courier New', monospace; font-size: 0.8rem; resize: none;
+  background: var(--surface); color: var(--text); outline: none; line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STICKER STYLES  (unchanged from before)
+═══════════════════════════════════════════════════════════════ */
 
   .s-bold-white {
     font-size: 2rem; font-weight: 900; color: #fff;
     -webkit-text-stroke: 2px #000; paint-order: stroke fill;
     text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
   }
-
   .s-neon-glow {
     font-size: 1.8rem; font-weight: 700; color: #0ff;
     -webkit-text-stroke: 1px #005f5f;
     text-shadow: 0 0 7px #0ff, 0 0 20px #0ff, 0 0 40px #0ff, 0 0 80px #00bfff;
   }
-
   .s-fire {
     font-size: 2rem; font-weight: 800; color: #ff4500;
     -webkit-text-stroke: 1px #600;
     text-shadow: 0 0 5px #ff4500, 0 0 15px #ff6a00, 0 0 30px #ff8c00, 0 2px 4px rgba(0,0,0,0.6);
   }
-
   .s-gradient-pop {
     font-size: 2rem; font-weight: 900;
     background: linear-gradient(135deg, #f093fb, #f5576c, #fda085);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(2px 2px 0 #000) drop-shadow(-1px -1px 0 rgba(0,0,0,0.3));
   }
-
   .s-outline {
     font-size: 2rem; font-weight: 900; color: transparent;
     -webkit-text-stroke: 2.5px #fff;
     text-shadow: 0 0 4px rgba(0,0,0,0.8), 2px 2px 0 rgba(0,0,0,0.5), -1px -1px 0 rgba(0,0,0,0.5);
   }
-
   .s-retro {
     font-size: 1.8rem; font-weight: 900; color: #ffe66d;
     text-shadow: 3px 3px 0 #ff6b6b, 6px 6px 0 #c44569, 0 0 3px rgba(0,0,0,0.5);
     -webkit-text-stroke: 0.5px #996600; paint-order: stroke fill;
     letter-spacing: 2px;
   }
-
   .s-comic {
     font-size: 2rem; font-weight: 900; color: #fff;
     text-shadow: 3px 3px 0 #000; letter-spacing: 1px;
-    -webkit-text-stroke: 2px #000;
-    paint-order: stroke fill;
-    font-style: italic;
+    -webkit-text-stroke: 2px #000; paint-order: stroke fill; font-style: italic;
   }
-
   .s-rainbow {
     font-size: 2rem; font-weight: 800;
     background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(2px 2px 0 #000) drop-shadow(-1px -1px 0 rgba(0,0,0,0.3));
   }
-
   .s-frosted {
     font-size: 1.8rem; font-weight: 700; color: #fff;
     -webkit-text-stroke: 1px rgba(0,0,0,0.4); paint-order: stroke fill;
@@ -224,38 +305,32 @@
     background: rgba(0,0,0,0.25); border-radius: 12px; padding: 10px 18px;
     backdrop-filter: blur(6px);
   }
-
   .s-shadow-stack {
     font-size: 2rem; font-weight: 900; color: #fff;
     -webkit-text-stroke: 1px #800020; paint-order: stroke fill;
     text-shadow: 1px 1px 0 #e94560, 2px 2px 0 #e94560, 3px 3px 0 #e94560,
                  4px 4px 0 #e94560, 5px 5px 10px rgba(0,0,0,0.6);
   }
-
   .s-glitch {
     font-size: 2rem; font-weight: 900; color: #fff; position: relative;
     -webkit-text-stroke: 1px #000; paint-order: stroke fill;
-    text-shadow: 2px 0 #ff00de, -2px 0 #00ffff;
     animation: glitch 0.3s infinite alternate;
   }
   @keyframes glitch {
-    0% { text-shadow: 2px 0 #ff00de, -2px 0 #00ffff, 0 0 4px rgba(0,0,0,0.5); }
+    0%   { text-shadow: 2px 0 #ff00de, -2px 0 #00ffff, 0 0 4px rgba(0,0,0,0.5); }
     100% { text-shadow: -2px 0 #ff00de, 2px 0 #00ffff, 0 0 4px rgba(0,0,0,0.5); }
   }
-
   .s-emboss {
     font-size: 2rem; font-weight: 900; color: #8899aa;
     -webkit-text-stroke: 1px rgba(0,0,0,0.3); paint-order: stroke fill;
     text-shadow: -1px -1px 1px rgba(255,255,255,0.6), 1px 1px 2px rgba(0,0,0,0.8), 0 0 6px rgba(0,0,0,0.3);
   }
-
   .s-bubble {
     font-size: 2.2rem; font-weight: 900; color: #fff;
     -webkit-text-stroke: 1px #888; paint-order: stroke fill;
     text-shadow: 0 2px 0 #ccc, 0 3px 0 #bbb, 0 4px 0 #aaa, 0 5px 5px rgba(0,0,0,0.5);
     letter-spacing: 3px;
   }
-
   .s-gold {
     font-size: 2rem; font-weight: 900;
     background: linear-gradient(180deg, #f9d423, #e6a700, #f9d423, #e6a700);
@@ -263,107 +338,79 @@
     filter: drop-shadow(2px 2px 0 #000) drop-shadow(-1px -1px 0 rgba(0,0,0,0.3));
     letter-spacing: 1px;
   }
-
   .s-chalk {
     font-size: 1.8rem; font-weight: 600; color: #fff;
     -webkit-text-stroke: 1px rgba(0,0,0,0.5); paint-order: stroke fill;
     text-shadow: 0 0 5px rgba(255,255,255,0.4), 0 1px 3px rgba(0,0,0,0.6);
-    font-family: 'Courier New', monospace;
-    letter-spacing: 2px;
+    font-family: 'Courier New', monospace; letter-spacing: 2px;
   }
-
   .s-stamp {
     font-size: 1.6rem; font-weight: 900; color: #e94560;
     border: 4px solid #e94560; border-radius: 8px; padding: 8px 16px;
-    text-transform: uppercase; letter-spacing: 4px;
-    transform: rotate(-5deg);
-    text-shadow: 0 0 4px rgba(0,0,0,0.4);
-    box-shadow: 0 0 6px rgba(0,0,0,0.3);
+    text-transform: uppercase; letter-spacing: 4px; transform: rotate(-5deg);
+    text-shadow: 0 0 4px rgba(0,0,0,0.4); box-shadow: 0 0 6px rgba(0,0,0,0.3);
   }
-
   .s-pixel {
     font-size: 1.6rem; font-weight: 700; color: #0f0;
     font-family: 'Courier New', monospace;
     text-shadow: 0 0 5px #0f0, 0 0 10px #0f0, 0 1px 3px rgba(0,0,0,0.7);
-    -webkit-text-stroke: 0.5px #050; paint-order: stroke fill;
-    letter-spacing: 3px;
+    -webkit-text-stroke: 0.5px #050; paint-order: stroke fill; letter-spacing: 3px;
   }
-
   .s-pastel-pop {
     font-size: 2rem; font-weight: 900;
     background: linear-gradient(135deg, #a18cd1, #fbc2eb);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.5)) drop-shadow(-1px -1px 0 rgba(0,0,0,0.2));
   }
-
   .s-wavy {
     font-size: 2rem; font-weight: 800; color: #fff;
     -webkit-text-stroke: 1px #000; paint-order: stroke fill;
     text-decoration: underline wavy #e94560;
-    text-underline-offset: 6px;
-    text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+    text-underline-offset: 6px; text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
   }
-
   .s-tagged {
     font-size: 1.6rem; font-weight: 700; color: #fff;
-    background: #e94560; padding: 8px 18px; border-radius: 4px;
-    display: inline-block;
+    background: #e94560; padding: 8px 18px; border-radius: 4px; display: inline-block;
     box-shadow: 3px 3px 0 #0f3460, 0 0 8px rgba(0,0,0,0.3);
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
   }
-
   .s-yellow-pop {
     font-size: 2rem; font-weight: 900; color: #ffd400;
     font-family: 'Arial Black', sans-serif;
     text-shadow:
-      0 0 0 #000, 2px 0 0 #000, -2px 0 0 #000,
-      0 2px 0 #000, 0 -2px 0 #000,
-      2px 2px 0 #000, -2px -2px 0 #000,
-      2px -2px 0 #000, -2px 2px 0 #000,
-      5px 0 0 #ff2f6d, -5px 0 0 #ff2f6d,
-      0 5px 0 #ff2f6d, 0 -5px 0 #ff2f6d,
-      5px 5px 0 #ff2f6d, -5px -5px 0 #ff2f6d,
-      5px -5px 0 #ff2f6d, -5px 5px 0 #ff2f6d,
+      0 0 0 #000, 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000,
+      2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000,
+      5px 0 0 #ff2f6d, -5px 0 0 #ff2f6d, 0 5px 0 #ff2f6d, 0 -5px 0 #ff2f6d,
+      5px 5px 0 #ff2f6d, -5px -5px 0 #ff2f6d, 5px -5px 0 #ff2f6d, -5px 5px 0 #ff2f6d,
       10px 10px 10px rgba(0,0,0,0.2);
   }
-
   .s-strikethrough {
     font-size: 2rem; font-weight: 900; color: #fff;
     -webkit-text-stroke: 1px #000; paint-order: stroke fill;
-    text-decoration: line-through;
-    text-decoration-color: #e94560;
+    text-decoration: line-through; text-decoration-color: #e94560;
     text-decoration-thickness: 4px;
     text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
   }
 
-  /* ---- Animated Styles ---- */
-
+  /* ── Animated ── */
   .s-neon-flicker {
     font-size: 1.8rem; font-weight: 700; color: #0ff;
-    -webkit-text-stroke: 1px #005f5f;
-    animation: flicker 2s infinite;
+    -webkit-text-stroke: 1px #005f5f; animation: flicker 2s infinite;
   }
   @keyframes flicker {
-    0%,19%,21%,23%,25%,54%,56%,100% {
-      text-shadow: 0 0 7px #0ff, 0 0 20px #0ff, 0 0 50px #0ff, 0 0 100px #00bfff;
-    }
-    20%,24%,55% {
-      text-shadow: none; opacity: 0.6;
-    }
+    0%,19%,21%,23%,25%,54%,56%,100% { text-shadow: 0 0 7px #0ff,0 0 20px #0ff,0 0 50px #0ff,0 0 100px #00bfff; }
+    20%,24%,55% { text-shadow: none; opacity: 0.6; }
   }
-
   .s-fire-dance {
     font-size: 2rem; font-weight: 900; color: #ffd400;
     -webkit-text-stroke: 1px #ff2f6d; paint-order: stroke fill;
     animation: fireDance 0.8s infinite alternate;
-    text-shadow: 0 0 10px #ff4500, 0 0 20px #ff6a00, 0 0 40px #ff8c00;
   }
   @keyframes fireDance {
-    0%   { text-shadow: 0 0 10px #ff4500, 0 0 20px #ff6a00, 0 0 40px #ff8c00, 5px 5px 0 #ff2f6d, -5px -5px 0 #ff2f6d; transform: skewX(-2deg); }
-    50%  { text-shadow: 0 0 15px #ff6a00, 0 0 30px #ff8c00, 0 0 60px #ffd400, 5px 5px 0 #ff2f6d, -5px -5px 0 #ff2f6d; transform: skewX(0deg); }
-    100% { text-shadow: 0 0 10px #ffd400, 0 0 20px #ff4500, 0 0 40px #ff6a00, 5px 5px 0 #ff2f6d, -5px -5px 0 #ff2f6d; transform: skewX(2deg); }
+    0%   { text-shadow:0 0 10px #ff4500,0 0 20px #ff6a00,0 0 40px #ff8c00,5px 5px 0 #ff2f6d,-5px -5px 0 #ff2f6d; transform:skewX(-2deg); }
+    50%  { text-shadow:0 0 15px #ff6a00,0 0 30px #ff8c00,0 0 60px #ffd400,5px 5px 0 #ff2f6d,-5px -5px 0 #ff2f6d; transform:skewX(0deg); }
+    100% { text-shadow:0 0 10px #ffd400,0 0 20px #ff4500,0 0 40px #ff6a00,5px 5px 0 #ff2f6d,-5px -5px 0 #ff2f6d; transform:skewX(2deg); }
   }
-
   .s-pulse-pop {
     font-size: 2rem; font-weight: 900; color: #ffd400;
     font-family: 'Arial Black', sans-serif;
@@ -371,115 +418,120 @@
     text-shadow: 0 4px 12px rgba(0,0,0,0.5);
     animation: pulsePop 0.9s infinite ease-in-out alternate;
   }
-  @keyframes pulsePop {
-    from { transform: scale(0.92); }
-    to   { transform: scale(1.05); }
-  }
-
+  @keyframes pulsePop { from { transform:scale(0.92); } to { transform:scale(1.05); } }
   .s-rgb-shift {
     font-size: 2rem; font-weight: 900; color: #fff;
     -webkit-text-stroke: 1px #000; paint-order: stroke fill;
     animation: rgbShift 1.5s infinite;
   }
   @keyframes rgbShift {
-    0%   { text-shadow: 3px 0 0 #ff0000, -3px 0 0 #00ffff; color: #fff; }
-    33%  { text-shadow: 3px 0 0 #00ff00, -3px 0 0 #ff00ff; color: #ffe; }
-    66%  { text-shadow: 3px 0 0 #0000ff, -3px 0 0 #ffff00; color: #fff; }
-    100% { text-shadow: 3px 0 0 #ff0000, -3px 0 0 #00ffff; color: #fff; }
+    0%   { text-shadow:3px 0 0 #ff0000,-3px 0 0 #00ffff; color:#fff; }
+    33%  { text-shadow:3px 0 0 #00ff00,-3px 0 0 #ff00ff; color:#ffe; }
+    66%  { text-shadow:3px 0 0 #0000ff,-3px 0 0 #ffff00; color:#fff; }
+    100% { text-shadow:3px 0 0 #ff0000,-3px 0 0 #00ffff; color:#fff; }
   }
-
   .s-plasma {
     font-size: 2rem; font-weight: 900;
-    background: linear-gradient(90deg, #ff2f6d, #ffd400, #25d366, #0ff, #ff2f6d);
+    background: linear-gradient(90deg,#ff2f6d,#ffd400,#25d366,#0ff,#ff2f6d);
     background-size: 300% auto;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(2px 2px 0 #000) drop-shadow(-1px -1px 0 rgba(0,0,0,0.4));
     animation: plasma 3s linear infinite;
   }
-  @keyframes plasma {
-    from { background-position: 0% center; }
-    to   { background-position: 300% center; }
-  }
-
+  @keyframes plasma { from { background-position:0% center; } to { background-position:300% center; } }
   .s-shock {
     font-size: 2rem; font-weight: 900; color: #fff;
     -webkit-text-stroke: 1px #000; paint-order: stroke fill;
     animation: shock 0.4s infinite;
   }
   @keyframes shock {
-    0%,100% { text-shadow: 3px 0 #ffe600, -3px 0 #ffe600, 0 0 20px #ffe600, 0 0 40px #ffe600; color: #fff; }
-    25%      { text-shadow: -3px 0 #00cfff, 3px 0 #00cfff, 0 0 20px #00cfff, 0 0 40px #00cfff; color: #e0f8ff; }
-    50%      { text-shadow: 3px 0 #fff, -3px 0 #fff, 0 0 30px #fff, 0 0 60px #ffe600; color: #ffe600; }
-    75%      { text-shadow: -3px 0 #ff2f6d, 3px 0 #ff2f6d, 0 0 20px #ff2f6d, 0 0 40px #ff2f6d; color: #fff; }
+    0%,100% { text-shadow:3px 0 #ffe600,-3px 0 #ffe600,0 0 20px #ffe600,0 0 40px #ffe600; color:#fff; }
+    25%     { text-shadow:-3px 0 #00cfff,3px 0 #00cfff,0 0 20px #00cfff,0 0 40px #00cfff; color:#e0f8ff; }
+    50%     { text-shadow:3px 0 #fff,-3px 0 #fff,0 0 30px #fff,0 0 60px #ffe600; color:#ffe600; }
+    75%     { text-shadow:-3px 0 #ff2f6d,3px 0 #ff2f6d,0 0 20px #ff2f6d,0 0 40px #ff2f6d; color:#fff; }
   }
-
   .s-float {
     font-size: 2rem; font-weight: 900; color: #ffd400;
     font-family: 'Arial Black', sans-serif;
     -webkit-text-stroke: 3px #ff2f6d; paint-order: stroke fill;
-    text-shadow:
-      0 0 0 #000, 2px 0 0 #000, -2px 0 0 #000,
-      0 2px 0 #000, 0 -2px 0 #000, 2px 2px 0 #000, -2px -2px 0 #000,
-      0 8px 16px rgba(0,0,0,0.4);
+    text-shadow: 0 0 0 #000,2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000,
+                 2px 2px 0 #000,-2px -2px 0 #000,0 8px 16px rgba(0,0,0,0.4);
     animation: float 2.5s ease-in-out infinite alternate;
   }
-  @keyframes float {
-    from { transform: translateY(-6px); }
-    to   { transform: translateY(6px); }
-  }
+  @keyframes float { from { transform:translateY(-6px); } to { transform:translateY(6px); } }
 </style>
 </head>
-<body>
+<body class="dark">
 
-<div class="container">
-  <h1>WhatsApp Text Sticker Styles</h1>
+<div class="page">
 
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="header-icon">✦</div>
+      <div>
+        <div class="header-title">Sticker Studio</div>
+        <div class="header-sub">WhatsApp text sticker styles</div>
+      </div>
+    </div>
+    <div class="theme-toggle" id="modeToggle">
+      <span id="modeLabel">Dark</span>
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="favourites">♥ Favourites</button>
     <button class="tab-btn" data-tab="animated">✦ Animated</button>
     <button class="tab-btn" data-tab="static">◼ Static</button>
   </div>
 
-  <div id="customPreviewWrap" style="display:none; margin-bottom:20px;">
+  <!-- Custom CSS preview -->
+  <div id="customPreviewWrap" style="display:none;">
     <div class="custom-card">
-      <div class="style-name">✦ Custom CSS Preview</div>
-      <div class="preview"><span id="customSpan"></span></div>
+      <div class="custom-card-label">✦ Custom CSS Preview</div>
+      <div class="preview-box"><span id="customSpan"></span></div>
     </div>
   </div>
 
-  <div class="grid-wrapper">
+  <!-- Grid -->
   <div class="grid" id="grid"></div>
-  </div>
 
-  <div class="input-section">
-    <label for="stickerText">Enter your sticker text:</label>
-    <textarea id="stickerText" placeholder="Type something...">This is awesome!</textarea>
-    <div class="controls">
-      <div class="mode-toggle" id="modeToggle">
-        <span id="modeLabel">Dark</span>
-        <div class="toggle-track"><div class="toggle-thumb"></div></div>
-      </div>
-      <label>Font:
+</div>
+
+<!-- Bottom bar -->
+<div class="bottom-bar">
+  <div class="bottom-bar-inner">
+    <div class="text-row">
+      <textarea id="stickerText" placeholder="Type your sticker text…" rows="1">This is awesome!</textarea>
+    </div>
+    <div class="controls-row">
+      <div class="ctrl">
+        <span class="ctrl-label">Font</span>
         <select id="fontFamily">
-          <option value="'Segoe UI', sans-serif">Segoe UI</option>
+          <option value="Inter, sans-serif">Inter</option>
           <option value="'Arial Black', sans-serif">Arial Black</option>
           <option value="Arial, sans-serif">Arial</option>
-          <option value="'Impact', sans-serif">Impact</option>
-          <option value="'Georgia', serif">Georgia</option>
+          <option value="Impact, sans-serif">Impact</option>
+          <option value="Georgia, serif">Georgia</option>
           <option value="'Times New Roman', serif">Times New Roman</option>
           <option value="'Courier New', monospace">Courier New</option>
           <option value="'Comic Sans MS', cursive">Comic Sans</option>
           <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
-          <option value="'Verdana', sans-serif">Verdana</option>
-          <option value="'Palatino', serif">Palatino</option>
-          <option value="'Lucida Console', monospace">Lucida Console</option>
+          <option value="Verdana, sans-serif">Verdana</option>
+          <option value="Palatino, serif">Palatino</option>
         </select>
-      </label>
-      <label>Font Size: <input type="range" id="fontSize" min="0.8" max="3" step="0.1" value="1"> <span id="fontSizeVal">1x</span></label>
-      <button class="css-btn" id="cssToggle">⌨ Custom CSS</button>
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">Size</span>
+        <input type="range" id="fontSize" min="0.8" max="3" step="0.1" value="1">
+        <span id="fontSizeVal" style="min-width:28px;text-align:right;">1×</span>
+      </div>
+      <button class="css-btn" id="cssToggle">⌨ CSS</button>
     </div>
     <div class="css-panel" id="cssPanel">
-      <textarea id="cssInput" placeholder="Paste your CSS here, e.g:
+      <textarea id="cssInput" placeholder="Paste CSS properties here, e.g:
 font-size: 2rem;
 font-weight: 900;
 color: #ffd400;
@@ -491,56 +543,55 @@ text-shadow: 2px 2px 0 #000;"></textarea>
 
 <script>
 const styles = [
-  { name: 'Bold Outline',    cls: 's-bold-white' },
-  { name: 'Neon Glow',       cls: 's-neon-glow',    animated: true },
-  { name: 'Fire',            cls: 's-fire' },
-  { name: 'Gradient Pop',    cls: 's-gradient-pop' },
-  { name: 'Outline Only',    cls: 's-outline' },
-  { name: 'Retro Stack',     cls: 's-retro' },
-  { name: 'Comic',           cls: 's-comic' },
-  { name: 'Rainbow',         cls: 's-rainbow' },
-  { name: 'Frosted Glass',   cls: 's-frosted' },
-  { name: 'Shadow Stack',    cls: 's-shadow-stack' },
-  { name: 'Glitch',          cls: 's-glitch',        animated: true },
-  { name: 'Emboss',          cls: 's-emboss' },
-  { name: '3D Bubble',       cls: 's-bubble' },
-  { name: 'Gold',            cls: 's-gold' },
-  { name: 'Chalk',           cls: 's-chalk' },
-  { name: 'Stamp',           cls: 's-stamp' },
-  { name: 'Pixel / Matrix',  cls: 's-pixel' },
-  { name: 'Pastel Pop',      cls: 's-pastel-pop' },
-  { name: 'Wavy Underline',  cls: 's-wavy' },
-  { name: 'Tagged',          cls: 's-tagged' },
-  { name: 'Yellow Pop',      cls: 's-yellow-pop' },
-  { name: 'Strikethrough',   cls: 's-strikethrough' },
-  { name: 'Neon Flicker',    cls: 's-neon-flicker',  animated: true },
-  { name: 'Fire Dance',      cls: 's-fire-dance',    animated: true },
-  { name: 'Pulse Pop',       cls: 's-pulse-pop',     animated: true },
-  { name: 'RGB Shift',       cls: 's-rgb-shift',     animated: true },
-  { name: 'Plasma Wave',     cls: 's-plasma',        animated: true },
-  { name: 'Shock',           cls: 's-shock',         animated: true },
-  { name: 'Float',           cls: 's-float',         animated: true },
+  { name: 'Bold Outline',   cls: 's-bold-white' },
+  { name: 'Neon Glow',      cls: 's-neon-glow',   animated: true },
+  { name: 'Fire',           cls: 's-fire' },
+  { name: 'Gradient Pop',   cls: 's-gradient-pop' },
+  { name: 'Outline Only',   cls: 's-outline' },
+  { name: 'Retro Stack',    cls: 's-retro' },
+  { name: 'Comic',          cls: 's-comic' },
+  { name: 'Rainbow',        cls: 's-rainbow' },
+  { name: 'Frosted Glass',  cls: 's-frosted' },
+  { name: 'Shadow Stack',   cls: 's-shadow-stack' },
+  { name: 'Glitch',         cls: 's-glitch',       animated: true },
+  { name: 'Emboss',         cls: 's-emboss' },
+  { name: '3D Bubble',      cls: 's-bubble' },
+  { name: 'Gold',           cls: 's-gold' },
+  { name: 'Chalk',          cls: 's-chalk' },
+  { name: 'Stamp',          cls: 's-stamp' },
+  { name: 'Pixel / Matrix', cls: 's-pixel' },
+  { name: 'Pastel Pop',     cls: 's-pastel-pop' },
+  { name: 'Wavy Underline', cls: 's-wavy' },
+  { name: 'Tagged',         cls: 's-tagged' },
+  { name: 'Yellow Pop',     cls: 's-yellow-pop' },
+  { name: 'Strikethrough',  cls: 's-strikethrough' },
+  { name: 'Neon Flicker',   cls: 's-neon-flicker', animated: true },
+  { name: 'Fire Dance',     cls: 's-fire-dance',   animated: true },
+  { name: 'Pulse Pop',      cls: 's-pulse-pop',    animated: true },
+  { name: 'RGB Shift',      cls: 's-rgb-shift',    animated: true },
+  { name: 'Plasma Wave',    cls: 's-plasma',       animated: true },
+  { name: 'Shock',          cls: 's-shock',        animated: true },
+  { name: 'Float',          cls: 's-float',        animated: true },
 ];
 
-const grid = document.getElementById('grid');
-const textarea = document.getElementById('stickerText');
-const cssToggle = document.getElementById('cssToggle');
-const cssPanel = document.getElementById('cssPanel');
-const cssInput = document.getElementById('cssInput');
+const grid       = document.getElementById('grid');
+const textarea   = document.getElementById('stickerText');
+const cssToggle  = document.getElementById('cssToggle');
+const cssPanel   = document.getElementById('cssPanel');
+const cssInput   = document.getElementById('cssInput');
 const customSpan = document.getElementById('customSpan');
-const customPreviewWrap = document.getElementById('customPreviewWrap');
-const customStyleTag = document.createElement('style');
-document.head.appendChild(customStyleTag);
-const fontSize = document.getElementById('fontSize');
-const fontSizeVal = document.getElementById('fontSizeVal');
+const customWrap = document.getElementById('customPreviewWrap');
+const customTag  = document.createElement('style');
+document.head.appendChild(customTag);
+const fontSize   = document.getElementById('fontSize');
+const fontSizeVal= document.getElementById('fontSizeVal');
 const modeToggle = document.getElementById('modeToggle');
-const modeLabel = document.getElementById('modeLabel');
+const modeLabel  = document.getElementById('modeLabel');
 const fontFamily = document.getElementById('fontFamily');
+
 let isDark = true;
 let activeTab = 'favourites';
 const pinned = new Set(JSON.parse(localStorage.getItem('pinnedStyles') || '[]'));
-
-document.body.classList.add('dark-mode');
 
 function savePinned() {
   localStorage.setItem('pinnedStyles', JSON.stringify([...pinned]));
@@ -556,60 +607,75 @@ function render() {
   else visible = styles.filter(s => !s.animated);
 
   if (visible.length === 0) {
-    grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;opacity:0.5;padding:40px;">
-      ${activeTab === 'favourites' ? 'No favourites yet — tap ♡ on any style.' : 'Nothing here yet.'}
-    </p>`;
+    grid.innerHTML = `<div class="empty-state">
+      <span class="icon">${activeTab === 'favourites' ? '♡' : '✦'}</span>
+      ${activeTab === 'favourites'
+        ? 'No favourites yet.<br>Tap the heart on any style to pin it here.'
+        : 'Nothing here yet.'}
+    </div>`;
     return;
   }
+
+  const scale = parseFloat(fontSize.value);
+  const font  = fontFamily.value;
 
   visible.forEach(s => {
     const isPinned = pinned.has(s.cls);
     const card = document.createElement('div');
-    card.className = 'style-card' + (isPinned ? ' pinned' : '');
+    card.className = 'style-card';
     card.innerHTML = `
-      <div class="style-name">${s.name}</div>
-      <div class="preview"><span class="${s.cls}">${text}</span></div>
-      <button class="fav-btn ${isPinned ? 'active' : ''}" data-cls="${s.cls}">${isPinned ? '&#9829;' : '&#9825;'}</button>
-      <button class="copy-btn" data-cls="${s.cls}">Copy CSS</button>
-    `;
+      <div class="preview">
+        <span class="${s.cls}" style="transform:scale(${scale});display:inline-block;max-width:100%;word-break:break-word;overflow-wrap:break-word;font-family:${font};">${text}</span>
+      </div>
+      <div class="card-footer">
+        <span class="style-name">${s.name}</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="copy-btn" data-cls="${s.cls}">Copy</button>
+          <button class="fav-btn ${isPinned ? 'active' : ''}" data-cls="${s.cls}">${isPinned ? '♥' : '♡'}</button>
+        </div>
+      </div>`;
     grid.appendChild(card);
   });
-  const scale = parseFloat(fontSize.value);
-  const font = fontFamily.value;
-  document.querySelectorAll('.preview span').forEach(el => {
-    el.style.transform = `scale(${scale})`;
-    el.style.display = 'inline-block';
-    el.style.maxWidth = '100%';
-    el.style.wordBreak = 'break-word';
-    el.style.overflowWrap = 'break-word';
-    el.style.fontFamily = font;
-  });
+
   updateCustomPreview();
 }
 
 function updateCustomPreview() {
   const text = textarea.value || 'This is awesome!';
-  const css = cssInput.value.trim();
-  if (!css) { customPreviewWrap.style.display = 'none'; return; }
-  customPreviewWrap.style.display = 'block';
+  const css  = cssInput.value.trim();
+  if (!css) { customWrap.style.display = 'none'; return; }
+  customWrap.style.display = 'block';
   customSpan.textContent = text;
-  customStyleTag.textContent = `#customSpan { ${css} }`;
+  customTag.textContent = `#customSpan { ${css} }`;
   const scale = parseFloat(fontSize.value);
-  customSpan.style.transform = `scale(${scale})`;
-  customSpan.style.display = 'inline-block';
-  customSpan.style.maxWidth = '100%';
-  customSpan.style.wordBreak = 'break-word';
-  customSpan.style.fontFamily = fontFamily.value;
+  customSpan.style.cssText += `transform:scale(${scale});display:inline-block;max-width:100%;word-break:break-word;font-family:${fontFamily.value};`;
 }
 
 grid.addEventListener('click', e => {
-  const favBtn = e.target.closest('.fav-btn');
-  if (favBtn) {
-    const cls = favBtn.dataset.cls;
-    if (pinned.has(cls)) pinned.delete(cls); else pinned.add(cls);
-    savePinned();
-    render();
-    return;
+  const fav = e.target.closest('.fav-btn');
+  if (fav) {
+    const cls = fav.dataset.cls;
+    pinned.has(cls) ? pinned.delete(cls) : pinned.add(cls);
+    savePinned(); render(); return;
+  }
+  const copyBtn = e.target.closest('.copy-btn');
+  if (copyBtn) {
+    const cls = copyBtn.dataset.cls;
+    const el  = document.querySelector(`.${cls}`);
+    if (!el) return;
+    const cs  = getComputedStyle(el);
+    const props = ['font-size','font-weight','color','text-shadow','letter-spacing','font-family',
+      '-webkit-text-stroke','-webkit-text-fill-color','background','border','border-radius','padding','transform'];
+    let out = `.sticker {\n`;
+    props.forEach(p => {
+      const v = cs.getPropertyValue(p);
+      if (v && v !== 'none' && v !== 'normal' && v !== '0px' && v !== 'rgba(0, 0, 0, 0)') out += `  ${p}: ${v};\n`;
+    });
+    out += `}`;
+    navigator.clipboard.writeText(out).then(() => {
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => copyBtn.textContent = 'Copy', 1200);
+    });
   }
 });
 
@@ -624,54 +690,29 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 modeToggle.addEventListener('click', () => {
   isDark = !isDark;
-  document.body.classList.toggle('dark-mode', isDark);
-  document.body.classList.toggle('light-mode', !isDark);
+  document.body.className = isDark ? 'dark' : 'light';
   modeLabel.textContent = isDark ? 'Dark' : 'Light';
 });
 
 document.addEventListener('keydown', e => {
-  if (e.shiftKey && e.code === 'Space' && document.activeElement !== textarea) {
-    e.preventDefault();
-    modeToggle.click();
+  if (e.shiftKey && e.code === 'Space' && document.activeElement !== textarea && document.activeElement !== cssInput) {
+    e.preventDefault(); modeToggle.click();
   }
 });
 
 cssToggle.addEventListener('click', () => {
   const open = cssPanel.classList.toggle('open');
   cssToggle.classList.toggle('active', open);
-  if (!open) { customPreviewWrap.style.display = 'none'; customStyleTag.textContent = ''; }
+  if (!open) { customWrap.style.display = 'none'; customTag.textContent = ''; }
   else updateCustomPreview();
 });
 
 cssInput.addEventListener('input', updateCustomPreview);
-
 textarea.addEventListener('input', render);
 fontFamily.addEventListener('change', render);
 fontSize.addEventListener('input', () => {
-  fontSizeVal.textContent = fontSize.value + 'x';
+  fontSizeVal.textContent = fontSize.value + '×';
   render();
-});
-
-grid.addEventListener('click', e => {
-  const btn = e.target.closest('.copy-btn');
-  if (!btn) return;
-  const cls = btn.dataset.cls;
-  const el = document.querySelector(`.${cls}`);
-  const computed = getComputedStyle(el);
-  const props = ['font-size','font-weight','color','text-shadow','letter-spacing','font-family',
-    '-webkit-text-stroke','-webkit-text-fill-color','background','border','border-radius','padding','transform'];
-  let css = `.sticker {\n`;
-  props.forEach(p => {
-    const v = computed.getPropertyValue(p);
-    if (v && v !== 'none' && v !== 'normal' && v !== '0px' && v !== 'rgba(0, 0, 0, 0)') {
-      css += `  ${p}: ${v};\n`;
-    }
-  });
-  css += `}`;
-  navigator.clipboard.writeText(css).then(() => {
-    btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Copy CSS', 1200);
-  });
 });
 
 render();
