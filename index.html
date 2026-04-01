@@ -6,6 +6,7 @@
 <title>Sticker Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* ── Reset & Base ─────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -185,6 +186,28 @@ body.light {
 }
 .style-card:hover .copy-btn { opacity: 1; }
 .copy-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.export-btn {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  border-radius: 6px; padding: 3px 9px; font-size: 0.68rem; font-weight: 600;
+  cursor: pointer; opacity: 0; transition: opacity var(--transition), background var(--transition);
+}
+.style-card:hover .export-btn { opacity: 1; }
+.export-btn:hover { background: #6c47ff; color: #fff; border-color: #6c47ff; }
+.export-btn.loading { opacity: 1; background: var(--surface2); color: var(--muted); cursor: not-allowed; pointer-events: none; }
+
+.card-exporting::after {
+  content: ''; position: absolute; inset: 0; border-radius: var(--radius);
+  background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+  z-index: 10;
+}
+.card-exporting::before {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 28px; height: 28px; margin: -14px 0 0 -14px;
+  border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff;
+  border-radius: 50%; animation: spin 0.7s linear infinite; z-index: 11;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Font Modal ───────────────────────────────────────────────── */
 .modal-overlay {
@@ -752,6 +775,7 @@ function render() {
       <div class="card-footer">
         <span class="style-name">${s.name}</span>
         <div style="display:flex;gap:6px;align-items:center;">
+          <button class="export-btn" data-cls="${s.cls}" data-animated="${s.animated ? '1' : ''}">⬇ WebP</button>
           <button class="copy-btn" data-cls="${s.cls}">Copy</button>
           <button class="fav-btn ${isPinned ? 'active' : ''}" data-cls="${s.cls}">${isPinned ? '♥' : '♡'}</button>
         </div>
@@ -773,6 +797,131 @@ function updateCustomPreview() {
   customSpan.style.cssText += `transform:scale(${scale});display:inline-block;max-width:100%;word-break:break-word;font-family:${fontFamily.value};`;
 }
 
+/* ── Animated WebP encoder ──────────────────────────────────────── */
+function u32(n) { return [n&0xFF,(n>>8)&0xFF,(n>>16)&0xFF,(n>>24)&0xFF]; }
+function u24(n) { return [n&0xFF,(n>>8)&0xFF,(n>>16)&0xFF]; }
+
+async function extractVP8Chunk(blob) {
+  const buf = await blob.arrayBuffer();
+  const b   = new Uint8Array(buf);
+  const dv  = new DataView(buf);
+  if (String.fromCharCode(...b.slice(0,4)) !== 'RIFF' ||
+      String.fromCharCode(...b.slice(8,12)) !== 'WEBP') return null;
+  let off = 12;
+  while (off < b.length - 8) {
+    const tag  = String.fromCharCode(...b.slice(off, off+4));
+    const size = dv.getUint32(off+4, true);
+    if (tag === 'VP8 ' || tag === 'VP8L') return b.slice(off, off+8+size);
+    off += 8 + size + (size & 1);
+  }
+  return null;
+}
+
+function concat(...arrays) {
+  const len = arrays.reduce((a,b) => a+b.length, 0);
+  const out = new Uint8Array(len);
+  let off = 0;
+  for (const a of arrays) { out.set(a, off); off += a.length; }
+  return out;
+}
+
+async function buildAnimatedWebP(frames, w, h, delayMs) {
+  const chunks = await Promise.all(frames.map(extractVP8Chunk));
+  const valid  = chunks.filter(Boolean);
+  if (!valid.length) return null;
+
+  // VP8X
+  const vp8x = new Uint8Array([
+    0x56,0x50,0x38,0x58, ...u32(10),
+    0x02,0,0,0,           // flags: animation
+    ...u24(w-1), ...u24(h-1)
+  ]);
+  // ANIM
+  const anim = new Uint8Array([
+    0x41,0x4E,0x49,0x4D, ...u32(6),
+    0,0,0,0,              // bg color transparent
+    0,0                   // loop count 0 = infinite
+  ]);
+  // ANMF per frame
+  const anmfChunks = valid.map(fc => {
+    const dataSize = 16 + fc.length;
+    const padded   = dataSize + (dataSize & 1);
+    const anmf     = new Uint8Array(8 + padded);
+    anmf.set([0x41,0x4E,0x4D,0x46, ...u32(dataSize)]);
+    anmf.set([...u24(0),...u24(0),...u24(w-1),...u24(h-1),...u24(delayMs),0x02], 8);
+    anmf.set(fc, 24);
+    return anmf;
+  });
+
+  const body    = concat(vp8x, anim, ...anmfChunks);
+  const riffHdr = new Uint8Array([0x52,0x49,0x46,0x46,...u32(4+body.length),0x57,0x45,0x42,0x50]);
+  return new Blob([concat(riffHdr, body)], { type: 'image/webp' });
+}
+
+function download(blob, name) {
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: name });
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+async function canvasToWebP(canvas, quality) {
+  return new Promise(r => canvas.toBlob(r, 'image/webp', quality));
+}
+
+async function exportSticker(style, btn) {
+  const SIZE    = 512;
+  const text    = textarea.value || 'This is awesome!';
+  const font    = fontFamily.value;
+  const scale   = parseFloat(fontSize.value) * (SIZE / 200);
+  const card    = btn.closest('.style-card');
+
+  btn.textContent = '…'; btn.classList.add('loading');
+  card.classList.add('card-exporting');
+
+  const wrap = Object.assign(document.createElement('div'), {
+    style: `position:fixed;top:-9999px;left:-9999px;width:${SIZE}px;height:${SIZE}px;
+            display:flex;align-items:center;justify-content:center;overflow:hidden;background:transparent;`
+  });
+  const span = document.createElement('span');
+  span.className = style.cls;
+  span.textContent = text;
+  Object.assign(span.style, {
+    fontFamily: font, display: 'inline-block', maxWidth: '85%',
+    wordBreak: 'break-word', overflowWrap: 'break-word', textAlign: 'center',
+    transform: `scale(${scale})`, transformOrigin: 'center'
+  });
+  wrap.appendChild(span);
+  document.body.appendChild(wrap);
+
+  try {
+    if (!style.animated) {
+      const canvas = await html2canvas(wrap, { width:SIZE, height:SIZE, backgroundColor:null, scale:1, logging:false });
+      // Target < 510 KB, try quality from 0.95 down
+      let blob, q = 0.95;
+      do { blob = await canvasToWebP(canvas, q); q -= 0.1; } while (blob.size > 510*1024 && q > 0.1);
+      download(blob, `${style.name}.webp`);
+    } else {
+      const FPS = 15, DURATION = 2000;
+      const FRAMES = Math.round(FPS * DURATION / 1000);
+      const DELAY  = Math.round(1000 / FPS);
+      const frameBlobs = [];
+      for (let i = 0; i < FRAMES; i++) {
+        await new Promise(r => setTimeout(r, DELAY));
+        const canvas = await html2canvas(wrap, { width:SIZE, height:SIZE, backgroundColor:null, scale:1, logging:false });
+        let blob, q = 0.85;
+        // keep each frame small so total stays < 510 KB
+        do { blob = await canvasToWebP(canvas, q); q -= 0.1; } while (blob.size > Math.floor(510*1024/FRAMES) && q > 0.1);
+        frameBlobs.push(blob);
+      }
+      const animated = await buildAnimatedWebP(frameBlobs, SIZE, SIZE, DELAY);
+      download(animated, `${style.name}-animated.webp`);
+    }
+  } finally {
+    document.body.removeChild(wrap);
+    btn.textContent = '⬇ WebP'; btn.classList.remove('loading');
+    card.classList.remove('card-exporting');
+  }
+}
+
 grid.addEventListener('dblclick', e => {
   const card = e.target.closest('.style-card');
   if (!card) return;
@@ -788,6 +937,13 @@ grid.addEventListener('click', e => {
     const cls = fav.dataset.cls;
     pinned.has(cls) ? pinned.delete(cls) : pinned.add(cls);
     savePinned(); render(); return;
+  }
+  const expBtn = e.target.closest('.export-btn');
+  if (expBtn) {
+    const cls   = expBtn.dataset.cls;
+    const style = styles.find(s => s.cls === cls);
+    if (style) exportSticker(style, expBtn);
+    return;
   }
   const copyBtn = e.target.closest('.copy-btn');
   if (!copyBtn) {
